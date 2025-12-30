@@ -47,7 +47,8 @@
         {
           "photosPermission": "Allow ReturnHelper to access your photos to upload return labels"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,65 +16,126 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Colors, Spacing, FontSizes, BorderRadius } from '../../constants/theme';
 import { useAuth } from '../../lib/AuthContext';
+import { apiRequest } from '../../lib/api';
 import { ReturnStatus } from '../../types';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
 };
 
-const mockReturns = [
-  {
-    id: '1',
-    retailer: 'Amazon',
-    items: 2,
-    date: 'Dec 29, 2025',
-    status: 'SCHEDULED' as ReturnStatus,
-  },
-  {
-    id: '2',
-    retailer: 'Target',
-    items: 1,
-    date: 'Dec 28, 2025',
-    status: 'PICKED_UP' as ReturnStatus,
-  },
-  {
-    id: '3',
-    retailer: 'Walmart',
-    items: 3,
-    date: 'Dec 25, 2025',
-    status: 'COMPLETED' as ReturnStatus,
-  },
-];
+interface ReturnItem {
+  id: string;
+  retailer: string;
+  productName: string;
+  status: string;
+}
 
-const stats = [
-  { label: 'Active', value: 2, icon: 'cube-outline' },
-  { label: 'Pending', value: 1, icon: 'time-outline' },
-  { label: 'Completed', value: 12, icon: 'checkmark-circle-outline' },
-  { label: 'This Month', value: '3/5', icon: 'calendar-outline' },
-];
+interface Return {
+  id: string;
+  status: ReturnStatus;
+  scheduledDate: string;
+  timeWindow: string;
+  items: ReturnItem[];
+  createdAt: string;
+  lastUpdate: string;
+}
 
 const getStatusBadge = (status: ReturnStatus) => {
   switch (status) {
     case 'SCHEDULED':
       return { label: 'Scheduled', variant: 'info' as const };
+    case 'DRIVER_ASSIGNED':
+      return { label: 'Driver Assigned', variant: 'info' as const };
     case 'PICKED_UP':
     case 'IN_TRANSIT':
-      return { label: 'Picked Up', variant: 'warning' as const };
+      return { label: 'In Transit', variant: 'warning' as const };
+    case 'DROPPED_OFF':
+      return { label: 'Dropped Off', variant: 'success' as const };
     case 'COMPLETED':
       return { label: 'Completed', variant: 'success' as const };
+    case 'CANCELLED':
+      return { label: 'Cancelled', variant: 'destructive' as const };
     default:
       return { label: status, variant: 'default' as const };
   }
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 export function DashboardScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [returns, setReturns] = useState<Return[]>([]);
+  const [stats, setStats] = useState({
+    active: 0,
+    pending: 0,
+    completed: 0,
+    thisMonth: 0,
+  });
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+  const fetchReturns = useCallback(async () => {
+    try {
+      const response = await apiRequest<{ returns: Return[] }>('/returns');
+      setReturns(response.returns);
+
+      // Calculate stats
+      const active = response.returns.filter(r =>
+        ['SCHEDULED', 'DRIVER_ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'].includes(r.status)
+      ).length;
+      const pending = response.returns.filter(r => r.status === 'SCHEDULED').length;
+      const completed = response.returns.filter(r => r.status === 'COMPLETED').length;
+
+      // Count returns this month
+      const now = new Date();
+      const thisMonthReturns = response.returns.filter(r => {
+        const created = new Date(r.createdAt);
+        return created.getMonth() === now.getMonth() &&
+               created.getFullYear() === now.getFullYear();
+      }).length;
+
+      setStats({ active, pending, completed, thisMonth: thisMonthReturns });
+    } catch (error) {
+      console.error('Failed to fetch returns:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReturns();
+  }, [fetchReturns]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchReturns();
+    setRefreshing(false);
+  }, [fetchReturns]);
+
+  const statsDisplay = [
+    { label: 'Active', value: stats.active, icon: 'cube-outline' },
+    { label: 'Pending', value: stats.pending, icon: 'time-outline' },
+    { label: 'Completed', value: stats.completed, icon: 'checkmark-circle-outline' },
+    { label: 'This Month', value: stats.thisMonth, icon: 'calendar-outline' },
+  ];
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading your returns...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,7 +161,7 @@ export function DashboardScreen({ navigation }: Props) {
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <View key={index} style={styles.statCard}>
               <Ionicons
                 name={stat.icon as any}
@@ -133,39 +195,78 @@ export function DashboardScreen({ navigation }: Props) {
         <Card style={styles.returnsCard}>
           <CardHeader
             title="Recent Returns"
-            subtitle="Your latest return requests"
+            subtitle={returns.length > 0 ? "Your latest return requests" : "No returns yet"}
             action={
-              <TouchableOpacity onPress={() => navigation.navigate('History')}>
-                <Text style={styles.viewAllText}>View all</Text>
-              </TouchableOpacity>
+              returns.length > 0 ? (
+                <TouchableOpacity onPress={() => navigation.navigate('History')}>
+                  <Text style={styles.viewAllText}>View all</Text>
+                </TouchableOpacity>
+              ) : null
             }
           />
           <CardContent style={styles.returnsList}>
-            {mockReturns.map((returnItem) => {
-              const badge = getStatusBadge(returnItem.status);
-              return (
-                <TouchableOpacity
-                  key={returnItem.id}
-                  style={styles.returnItem}
-                  onPress={() => navigation.navigate('ReturnDetail', { id: returnItem.id })}
-                >
-                  <View style={styles.returnIcon}>
-                    <Ionicons name="cube-outline" size={24} color={Colors.mutedForeground} />
-                  </View>
-                  <View style={styles.returnInfo}>
-                    <Text style={styles.returnRetailer}>{returnItem.retailer}</Text>
-                    <Text style={styles.returnMeta}>
-                      {returnItem.items} item{returnItem.items > 1 ? 's' : ''} • {returnItem.date}
-                    </Text>
-                  </View>
-                  <View style={styles.returnStatus}>
-                    <Badge label={badge.label} variant={badge.variant} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {returns.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="cube-outline" size={48} color={Colors.mutedForeground} />
+                <Text style={styles.emptyStateText}>No returns yet</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  Schedule your first return pickup
+                </Text>
+                <Button
+                  title="Create Return"
+                  onPress={() => navigation.navigate('NewReturn')}
+                  style={{ marginTop: Spacing.md }}
+                />
+              </View>
+            ) : (
+              returns.slice(0, 5).map((returnItem) => {
+                const badge = getStatusBadge(returnItem.status);
+                const retailer = returnItem.items[0]?.retailer || 'Unknown';
+                return (
+                  <TouchableOpacity
+                    key={returnItem.id}
+                    style={styles.returnItem}
+                    onPress={() => navigation.navigate('ReturnDetail', { id: returnItem.id })}
+                  >
+                    <View style={styles.returnIcon}>
+                      <Ionicons name="cube-outline" size={24} color={Colors.mutedForeground} />
+                    </View>
+                    <View style={styles.returnInfo}>
+                      <Text style={styles.returnRetailer}>{retailer}</Text>
+                      <Text style={styles.returnMeta}>
+                        {returnItem.items.length} item{returnItem.items.length > 1 ? 's' : ''} • {formatDate(returnItem.scheduledDate)}
+                      </Text>
+                    </View>
+                    <View style={styles.returnStatus}>
+                      <Badge label={badge.label} variant={badge.variant} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
           </CardContent>
         </Card>
+
+        {/* Tips Card */}
+        {returns.length === 0 && (
+          <Card style={styles.tipsCard}>
+            <CardHeader title="Quick Tips" />
+            <CardContent>
+              <View style={styles.tipItem}>
+                <Ionicons name="qr-code-outline" size={20} color={Colors.primary} />
+                <Text style={styles.tipText}>Scan your return QR code to auto-fill details</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <Ionicons name="time-outline" size={20} color={Colors.primary} />
+                <Text style={styles.tipText}>Schedule pickups up to 7 days in advance</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
+                <Text style={styles.tipText}>Get notified when your driver is on the way</Text>
+              </View>
+            </CardContent>
+          </Card>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,6 +276,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.muted,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: FontSizes.md,
+    color: Colors.mutedForeground,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -242,6 +353,21 @@ const styles = StyleSheet.create({
   returnsList: {
     padding: 0,
   },
+  emptyState: {
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: FontSizes.lg,
+    fontWeight: '600',
+    color: Colors.foreground,
+    marginTop: Spacing.md,
+  },
+  emptyStateSubtext: {
+    fontSize: FontSizes.sm,
+    color: Colors.mutedForeground,
+    marginTop: Spacing.xs,
+  },
   returnItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,5 +404,19 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
     color: Colors.primary,
     fontWeight: '500',
+  },
+  tipsCard: {
+    marginBottom: Spacing.lg,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  tipText: {
+    fontSize: FontSizes.sm,
+    color: Colors.foreground,
+    flex: 1,
   },
 });

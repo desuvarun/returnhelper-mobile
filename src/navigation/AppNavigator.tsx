@@ -15,6 +15,8 @@ import { DashboardScreen } from '../screens/customer/DashboardScreen';
 import { NewReturnScreen } from '../screens/customer/NewReturnScreen';
 import { ScanQRScreen } from '../screens/customer/ScanQRScreen';
 import { HistoryScreen } from '../screens/customer/HistoryScreen';
+import { ReturnDetailScreen } from '../screens/customer/ReturnDetailScreen';
+import { ProfileScreen } from '../screens/customer/ProfileScreen';
 
 // Driver Screens
 import { DriverDashboardScreen } from '../screens/driver/DriverDashboardScreen';
@@ -30,8 +32,6 @@ const PlaceholderScreen = ({ title }: { title: string }) => (
 );
 
 const SettingsScreen = () => <PlaceholderScreen title="Settings" />;
-const ProfileScreen = () => <PlaceholderScreen title="Profile" />;
-const ReturnDetailScreen = () => <PlaceholderScreen title="Return Details" />;
 const PickupsScreen = () => <PlaceholderScreen title="All Pickups" />;
 const PickupDetailScreen = () => <PlaceholderScreen title="Pickup Details" />;
 const EarningsScreen = () => <PlaceholderScreen title="Earnings" />;

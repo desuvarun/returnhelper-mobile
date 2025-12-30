@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,34 +6,42 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '../../components/ui/Badge';
 import { Colors, Spacing, FontSizes, BorderRadius } from '../../constants/theme';
-import { ReturnStatus } from '../../types';
+import { ReturnStatus, ReturnItem } from '../../types';
+import { apiRequest } from '../../lib/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
 };
 
-const mockHistory = [
-  { id: '1', retailer: 'Amazon', items: 2, date: 'Dec 29, 2025', status: 'SCHEDULED' as ReturnStatus },
-  { id: '2', retailer: 'Target', items: 1, date: 'Dec 28, 2025', status: 'PICKED_UP' as ReturnStatus },
-  { id: '3', retailer: 'Walmart', items: 3, date: 'Dec 25, 2025', status: 'COMPLETED' as ReturnStatus },
-  { id: '4', retailer: 'Best Buy', items: 1, date: 'Dec 20, 2025', status: 'COMPLETED' as ReturnStatus },
-  { id: '5', retailer: 'Costco', items: 2, date: 'Dec 15, 2025', status: 'COMPLETED' as ReturnStatus },
-  { id: '6', retailer: 'Amazon', items: 1, date: 'Dec 10, 2025', status: 'COMPLETED' as ReturnStatus },
-];
+interface Return {
+  id: string;
+  status: ReturnStatus;
+  scheduledDate: string;
+  timeWindow: string;
+  items: ReturnItem[];
+  createdAt: string;
+}
 
 const getStatusBadge = (status: ReturnStatus) => {
   switch (status) {
+    case 'PENDING':
+      return { label: 'Pending', variant: 'default' as const };
     case 'SCHEDULED':
       return { label: 'Scheduled', variant: 'info' as const };
+    case 'DRIVER_ASSIGNED':
+      return { label: 'Driver Assigned', variant: 'info' as const };
     case 'PICKED_UP':
     case 'IN_TRANSIT':
       return { label: 'In Progress', variant: 'warning' as const };
+    case 'DROPPED_OFF':
+      return { label: 'Dropped Off', variant: 'success' as const };
     case 'COMPLETED':
       return { label: 'Completed', variant: 'success' as const };
     case 'CANCELLED':
@@ -43,23 +51,59 @@ const getStatusBadge = (status: ReturnStatus) => {
   }
 };
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 export function HistoryScreen({ navigation }: Props) {
+  const [returns, setReturns] = useState<Return[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
 
-  const filteredHistory = mockHistory.filter((item) => {
+  const fetchReturns = useCallback(async () => {
+    try {
+      const response = await apiRequest<{ returns: Return[] }>('/returns');
+      setReturns(response.returns);
+    } catch (error) {
+      console.error('Failed to fetch returns:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReturns();
+  }, [fetchReturns]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchReturns();
+    });
+    return unsubscribe;
+  }, [navigation, fetchReturns]);
+
+  const filteredHistory = returns.filter((item) => {
     if (filter === 'all') return true;
     if (filter === 'active') return !['COMPLETED', 'CANCELLED'].includes(item.status);
     return item.status === 'COMPLETED';
   });
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await fetchReturns();
+    setRefreshing(false);
   };
 
-  const renderItem = ({ item }: { item: typeof mockHistory[0] }) => {
+  const renderItem = ({ item }: { item: Return }) => {
     const badge = getStatusBadge(item.status);
+    const retailer = item.items[0]?.retailer || 'Unknown';
+
     return (
       <TouchableOpacity
         style={styles.returnItem}
@@ -69,15 +113,29 @@ export function HistoryScreen({ navigation }: Props) {
           <Ionicons name="cube-outline" size={24} color={Colors.mutedForeground} />
         </View>
         <View style={styles.returnInfo}>
-          <Text style={styles.retailerName}>{item.retailer}</Text>
+          <Text style={styles.retailerName}>{retailer}</Text>
           <Text style={styles.returnMeta}>
-            {item.items} item{item.items > 1 ? 's' : ''} • {item.date}
+            {item.items.length} item{item.items.length > 1 ? 's' : ''} • {formatDate(item.scheduledDate)}
           </Text>
         </View>
-        <Badge label={badge.label} variant={badge.variant} />
+        <View style={styles.badgeContainer}>
+          <Badge label={badge.label} variant={badge.variant} />
+          <Ionicons name="chevron-forward" size={16} color={Colors.mutedForeground} style={{ marginLeft: 4 }} />
+        </View>
       </TouchableOpacity>
     );
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading history...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -107,9 +165,15 @@ export function HistoryScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="cube-outline" size={48} color={Colors.mutedForeground} />
-            <Text style={styles.emptyTitle}>No returns yet</Text>
+            <Text style={styles.emptyTitle}>
+              {filter === 'all' ? 'No returns yet' : `No ${filter} returns`}
+            </Text>
             <Text style={styles.emptyText}>
-              Your return history will appear here
+              {filter === 'all'
+                ? 'Your return history will appear here'
+                : filter === 'active'
+                ? 'You have no active returns right now'
+                : 'You haven\'t completed any returns yet'}
             </Text>
           </View>
         }
@@ -122,6 +186,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: FontSizes.md,
+    color: Colors.mutedForeground,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -150,6 +224,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Spacing.md,
+    flexGrow: 1,
   },
   returnItem: {
     flexDirection: 'row',
@@ -183,7 +258,12 @@ const styles = StyleSheet.create({
     color: Colors.mutedForeground,
     marginTop: 2,
   },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   emptyState: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.xxl,
@@ -198,5 +278,7 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.md,
     color: Colors.mutedForeground,
     marginTop: Spacing.xs,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.xl,
   },
 });

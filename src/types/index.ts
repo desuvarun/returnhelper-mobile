@@ -44,9 +44,10 @@ export interface Address {
   id: string;
   label: string;
   street: string;
+  apartment?: string;
   city: string;
   state: string;
-  zip: string;
+  zipCode: string;
   isDefault: boolean;
 }
 
