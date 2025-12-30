@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "returnhelper-mobile",
+    "name": "ReturnHelper",
     "slug": "returnhelper-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.returnhelper.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need camera access to scan return QR codes",
+        "NSPhotoLibraryUsageDescription": "We need photo library access to upload return labels"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +26,28 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.returnhelper.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow ReturnHelper to access your camera to scan QR codes"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ReturnHelper to access your photos to upload return labels"
+        }
+      ]
+    ]
   }
 }
