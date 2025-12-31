@@ -1,0 +1,70 @@
+{
+  "app": {
+    "name": "ReturnHelper",
+    "subtitle": "Easy Package Returns",
+    "shortDescription": "Schedule hassle-free package pickups for your online returns",
+    "fullDescription": "ReturnHelper makes returning online purchases effortless. No more trips to the post office or drop-off locations – we pick up your returns right from your doorstep.\n\n📦 EASY RETURNS\n• Scan return QR codes from any major retailer\n• Schedule pickups at your convenience\n• Track your returns in real-time\n\n🚗 DOORSTEP PICKUP\n• Choose your preferred time window\n• Our verified drivers come to you\n• No packaging hassle – we handle it all\n\n📱 REAL-TIME TRACKING\n• Get notified at every step\n• See when your driver is on the way\n• Confirm successful drop-off\n\n🏪 WORKS WITH ALL MAJOR RETAILERS\n• Amazon\n• Walmart\n• Target\n• Best Buy\n• Costco\n• And many more!\n\n💳 SIMPLE SUBSCRIPTION PLANS\n• Basic: 5 returns/month\n• Standard: 15 returns/month\n• Unlimited: Unlimited returns\n\nSay goodbye to return anxiety. Download ReturnHelper today and make returns as easy as the original purchase!\n\nQuestions? Contact us at support@returnhelper.app",
+    "keywords": [
+      "returns",
+      "package returns",
+      "delivery",
+      "pickup",
+      "shipping",
+      "amazon returns",
+      "walmart returns",
+      "target returns",
+      "online shopping",
+      "convenience",
+      "doorstep pickup"
+    ],
+    "category": {
+      "primary": "Shopping",
+      "secondary": "Lifestyle"
+    },
+    "contentRating": "4+",
+    "privacyPolicyUrl": "https://returnhelper.vercel.app/privacy",
+    "supportUrl": "https://returnhelper.vercel.app/support",
+    "marketingUrl": "https://returnhelper.vercel.app"
+  },
+  "screenshots": {
+    "required": {
+      "iphone65": {
+        "size": "1284x2778",
+        "description": "iPhone 14 Pro Max, 15 Plus, 15 Pro Max"
+      },
+      "iphone55": {
+        "size": "1242x2208",
+        "description": "iPhone 8 Plus"
+      },
+      "ipad129": {
+        "size": "2048x2732",
+        "description": "iPad Pro 12.9\""
+      }
+    },
+    "android": {
+      "phone": {
+        "size": "1080x1920",
+        "description": "Standard phone screenshots"
+      },
+      "tablet7": {
+        "size": "1200x1920",
+        "description": "7\" tablet"
+      },
+      "tablet10": {
+        "size": "1600x2560",
+        "description": "10\" tablet"
+      }
+    },
+    "captions": [
+      "Scan your return QR code to get started",
+      "Schedule a pickup at your convenience",
+      "Track your driver in real-time",
+      "Get notified at every step",
+      "View your complete return history"
+    ]
+  },
+  "releaseNotes": {
+    "version": "1.0.0",
+    "notes": "Initial release of ReturnHelper!\n\n• Scan return QR codes from major retailers\n• Schedule doorstep pickups\n• Real-time tracking with push notifications\n• View return history and status"
+  }
+}

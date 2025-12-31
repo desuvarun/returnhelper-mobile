@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="220" fill="#2563EB"/>
+
+  <!-- Box/Package icon -->
+  <g transform="translate(262, 280)">
+    <!-- Box body -->
+    <rect x="50" y="120" width="400" height="320" rx="20" fill="white" opacity="0.95"/>
+
+    <!-- Box flaps (top) -->
+    <path d="M50 140 L250 40 L450 140" stroke="white" stroke-width="24" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Box center line -->
+    <line x1="250" y1="40" x2="250" y2="200" stroke="#2563EB" stroke-width="16" stroke-linecap="round"/>
+
+    <!-- Return arrow -->
+    <g transform="translate(100, 220)">
+      <!-- Arrow curve -->
+      <path d="M200 0 C 320 0, 320 120, 200 120 L 80 120"
+            stroke="#2563EB" stroke-width="32" fill="none" stroke-linecap="round"/>
+      <!-- Arrow head -->
+      <path d="M120 70 L 60 120 L 120 170"
+            stroke="#2563EB" stroke-width="32" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>
