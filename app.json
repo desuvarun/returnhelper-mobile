@@ -15,7 +15,7 @@
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/YOUR_PROJECT_ID"
+      "url": "https://u.expo.dev/f49e3bc8-f173-4f96-9025-74d7b0980587"
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -55,8 +55,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
         "android.permission.RECORD_AUDIO"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -79,10 +78,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#2563EB",
-          "sounds": [
-            "./assets/notification-sound.wav"
-          ]
+          "color": "#2563EB"
         }
       ],
       [
