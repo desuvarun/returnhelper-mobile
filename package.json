@@ -19,6 +19,7 @@
     "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "^17.0.10",
     "expo-constants": "~18.0.12",
+    "expo-dev-client": "~6.0.20",
     "expo-device": "~8.0.10",
     "expo-image-picker": "^17.0.10",
     "expo-linear-gradient": "^15.0.8",

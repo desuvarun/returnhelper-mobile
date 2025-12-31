@@ -28,12 +28,16 @@
         "NSCameraUsageDescription": "ReturnHelper needs camera access to scan return QR codes from your packages",
         "NSPhotoLibraryUsageDescription": "ReturnHelper needs photo library access to upload return labels and package photos",
         "NSLocationWhenInUseUsageDescription": "ReturnHelper uses your location to show nearby drop-off points and track pickup drivers",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       },
       "config": {
         "usesNonExemptEncryption": false
       },
-      "associatedDomains": ["applinks:returnhelper.vercel.app"]
+      "associatedDomains": [
+        "applinks:returnhelper.vercel.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -49,7 +53,8 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
       ],
       "googleServicesFile": "./google-services.json"
     },
@@ -75,7 +80,9 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#2563EB",
-          "sounds": ["./assets/notification-sound.wav"]
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
         }
       ],
       [
@@ -88,9 +95,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "f49e3bc8-f173-4f96-9025-74d7b0980587"
       }
     },
-    "owner": "desuvarun"
+    "owner": "desuvarun255"
   }
 }
